@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Password Strength Analyzer - An educational tool that analyzes password strength locally in your browser. Your password never leaves your device.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Password Strength Analyzer | Educational Security Tool</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- No external fonts, analytics, or tracking scripts. Everything runs locally. -->
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">&#128274;</span>
+        <h1 class="brand-title">Password Strength Analyzer</h1>
+      </div>
+      <p class="tagline">An educational tool &mdash; your password never leaves your device.</p>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <!-- ============ ANALYZER SECTION ============ -->
+    <section class="card analyzer-card" aria-labelledby="analyzer-heading">
+      <h2 id="analyzer-heading" class="section-title">Analyze Your Password</h2>
+
+      <!-- Password Input -->
+      <div class="input-group">
+        <label for="password-input" class="input-label">Enter a password to analyze</label>
+        <div class="password-field">
+          <input
+            type="password"
+            id="password-input"
+            class="password-input"
+            placeholder="Type a password..."
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            aria-describedby="password-hint"
+            aria-live="polite"
+          >
+          <button
+            type="button"
+            id="toggle-password"
+            class="toggle-btn"
+            aria-label="Show password"
+            aria-pressed="false"
+          >
+            <span class="toggle-icon" aria-hidden="true">&#128065;</span>
+          </button>
+        </div>
+        <p id="password-hint" class="hint-text">
+          Analysis happens entirely in your browser. Nothing is sent, stored, or logged.
+        </p>
+      </div>
+
+      <!-- Strength Meter -->
+      <div class="meter-section" aria-live="polite">
+        <div class="meter-header">
+          <span id="strength-label" class="strength-label" role="status">Strength: Not analyzed</span>
+          <span id="entropy-label" class="entropy-label">Entropy: &mdash;</span>
+        </div>
+        <div class="meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Password strength meter">
+          <div id="meter-fill" class="meter-fill" style="width: 0%"></div>
+        </div>
+        <div class="meter-scale" aria-hidden="true">
+          <span>Very Weak</span>
+          <span>Weak</span>
+          <span>Medium</span>
+          <span>Strong</span>
+          <span>Very Strong</span>
+        </div>
+      </div>
+
+      <!-- Results Grid -->
+      <div id="results" class="results" hidden>
+        <div class="results-grid">
+          <!-- Check results will be injected here by JavaScript -->
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions" id="suggestions" hidden>
+          <h3 class="sub-heading">Suggestions to improve</h3>
+          <ul id="suggestions-list" class="suggestions-list"></ul>
+        </div>
+
+        <!-- Entropy Explanation -->
+        <div class="entropy-note">
+          <h3 class="sub-heading">About entropy</h3>
+          <p>
+            <strong>Entropy</strong> is an <em>estimate</em> of how many guesses an attacker would need
+            to crack your password. It is calculated from length and character variety, but real-world
+            cracking also depends on dictionary words, patterns, and leaked password lists. Treat this
+            number as a rough guide, not a guarantee.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GENERATOR SECTION ============ -->
+    <section class="card generator-card" aria-labelledby="generator-heading">
+      <h2 id="generator-heading" class="section-title">Generate a Strong Password</h2>
+      <p class="generator-intro">
+        Uses the browser's <code>crypto.getRandomValues()</code> &mdash; a cryptographically secure
+        random source. Generated passwords are never stored or transmitted.
+      </p>
+
+      <div class="generator-controls">
+        <div class="input-group">
+          <label for="gen-length" class="input-label">Password length</label>
+          <input
+            type="range"
+            id="gen-length"
+            min="8"
+            max="64"
+            value="20"
+            class="range-input"
+            aria-valuemin="8"
+            aria-valuemax="64"
+            aria-valuenow="20"
+          >
+          <span id="gen-length-value" class="range-value" aria-live="polite">20 characters</span>
+        </div>
+
+        <fieldset class="options-fieldset">
+          <legend class="input-label">Include:</legend>
+          <div class="checkbox-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="gen-upper" checked>
+              <span>Uppercase (A-Z)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="gen-lower" checked>
+              <span>Lowercase (a-z)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="gen-numbers" checked>
+              <span>Numbers (0-9)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="gen-symbols" checked>
+              <span>Symbols (!@#$...)</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="generated-field">
+          <label for="generated-password" class="input-label">Generated password</label>
+          <div class="password-field">
+            <input
+              type="text"
+              id="generated-password"
+              class="password-input"
+              readonly
+              placeholder="Click generate to create a password"
+              aria-describedby="generated-hint"
+            >
+            <button
+              type="button"
+              id="copy-password"
+              class="toggle-btn"
+              aria-label="Copy generated password to clipboard"
+            >
+              <span class="toggle-icon" aria-hidden="true">&#128203;</span>
+            </button>
+          </div>
+          <p id="generated-hint" class="hint-text">
+            Copy it into your password manager. Do not reuse passwords across sites.
+          </p>
+        </div>
+
+        <button type="button" id="generate-btn" class="btn btn-primary">Generate Strong Password</button>
+      </div>
+    </section>
+
+    <!-- ============ EDUCATIONAL SECTION ============ -->
+    <section class="card education-card" aria-labelledby="education-heading">
+      <h2 id="education-heading" class="section-title">Learn About Password Security</h2>
+
+      <div class="education-grid">
+        <article class="edu-item">
+          <h3 class="sub-heading">What makes a password strong?</h3>
+          <p>
+            A strong password is <strong>long</strong>, <strong>random</strong>, and
+            <strong>unique</strong>. Length is the single most important factor &mdash; every extra
+            character multiplies the number of possible combinations. Randomness means no dictionary
+            words, names, or predictable patterns. Uniqueness means you never reuse it on another site.
+          </p>
+        </article>
+
+        <article class="edu-item">
+          <h3 class="sub-heading">Why password length matters</h3>
+          <p>
+            Attackers often use "brute force" &mdash; trying every possible combination. Each extra
+            character increases the search space exponentially. For example, an 8-character password
+            with mixed characters has trillions of combinations, but a 16-character one has
+            quadrillions of times more. Modern GPUs can try billions of guesses per second, so short
+            passwords fall quickly no matter how "complex" they look.
+          </p>
+        </article>
+
+        <article class="edu-item">
+          <h3 class="sub-heading">Why password reuse is dangerous</h3>
+          <p>
+            If you use the same password on multiple sites and <em>one</em> of them gets breached,
+            attackers will try that password on your email, banking, and social accounts. This is
+            called <strong>credential stuffing</strong>. A single breach can compromise every account
+            that shares the password.
+          </p>
+        </article>
+
+        <article class="edu-item">
+          <h3 class="sub-heading">Why unique passwords are important</h3>
+          <p>
+            Unique passwords contain the damage of a breach. If a site you use is compromised, the
+            attacker only gets access to that one account &mdash; not your entire digital life.
+            Combined with a password manager, unique passwords are easy to maintain.
+          </p>
+        </article>
+
+        <article class="edu-item">
+          <h3 class="sub-heading">What password managers do</h3>
+          <p>
+            Password managers securely store all your passwords behind one master password. They
+            generate strong random passwords for each site, autofill them for you, and sync across
+            your devices with end-to-end encryption. You only need to remember one strong master
+            password. Popular options include Bitwarden, 1Password, and KeePass.
+          </p>
+        </article>
+
+        <article class="edu-item">
+          <h3 class="sub-heading">Why MFA / passkeys improve security</h3>
+          <p>
+            <strong>Multi-factor authentication (MFA)</strong> requires a second proof of identity
+            beyond your password &mdash; like a code from an authenticator app or a hardware key.
+            Even if your password is stolen, an attacker still can't get in without the second factor.
+            <strong>Passkeys</strong> go further: they replace passwords entirely with cryptographic
+            keys stored on your device, making phishing and credential theft nearly impossible.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ PRIVACY NOTE ============ -->
+    <section class="card privacy-card" aria-labelledby="privacy-heading">
+      <h2 id="privacy-heading" class="section-title">Privacy Guarantee</h2>
+      <ul class="privacy-list">
+        <li>&#10003; All analysis runs locally in your browser &mdash; no network requests are made.</li>
+        <li>&#10003; Your password is never sent, stored, logged, or transmitted anywhere.</li>
+        <li>&#10003; The password is never written to browser storage, URLs, or analytics.</li>
+        <li>&#10003; The page contains no external scripts, fonts, or tracking code.</li>
+        <li>&#10003; You can verify this by opening your browser's Developer Tools &rarr; Network tab.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        <strong>Password Strength Analyzer</strong> &mdash; an educational project.
+        This tool provides estimates only and does not guarantee real-world security.
+        Always use a reputable password manager and enable MFA where available.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts loaded at the end so the DOM is ready. No inline scripts. -->
+  <script src="js/analyzer.js"></script>
+  <script src="js/generator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
